@@ -1,0 +1,248 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="color-scheme" content="dark light" />
+  <title>Hacksudo JWT X-Ray</title>
+  <link rel="stylesheet" href="sidebar.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <div class="logo">HX</div>
+      <div>
+        <div class="title">Hacksudo JWT X-Ray</div>
+        <div class="sub">hacksudo.com • Vishal Waghmare</div>
+      </div>
+    </div>
+    <div class="toggles">
+      <label class="switch">
+        <input id="enabled" type="checkbox" />
+        <span class="slider"></span>
+      </label>
+      <span class="toggleText">ON</span>
+    </div>
+  </header>
+
+  <section class="current">
+    <div class="row">
+      <div class="label">Current tab</div>
+      <div id="currentUrl" class="value mono">—</div>
+    </div>
+  </section>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="decode">Decode</button>
+    <button class="tab" data-tab="analyze">Analyze</button>
+    <button class="tab" data-tab="compare">Compare</button>
+    <button class="tab" data-tab="builder">Builder</button>
+    <button class="tab" data-tab="rules">Rules</button>
+    <button class="tab" data-tab="history">History</button>
+  </nav>
+
+  <main class="panel">
+
+    <!-- Decode -->
+    <section class="pane show" id="pane-decode">
+      <div class="card">
+        <div class="cardTitle">Token input</div>
+        <textarea id="tokenInput" class="input mono" rows="4" placeholder="Paste JWT here..."></textarea>
+        <div class="btnRow">
+          <button id="btnUseLatest" class="btn">Use latest found</button>
+          <button id="btnDecode" class="btn primary">Decode</button>
+          <button id="btnSaveToHistory" class="btn">Save</button>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="cardTitle">Header</div>
+          <pre id="outHeader" class="out mono"></pre>
+        </div>
+        <div class="card">
+          <div class="cardTitle">Payload</div>
+          <pre id="outPayload" class="out mono"></pre>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cardTitle">Signature (base64url)</div>
+        <div id="outSig" class="mono outLine">—</div>
+      </div>
+    </section>
+
+    <!-- Analyze -->
+    <section class="pane" id="pane-analyze">
+      <div class="card">
+        <div class="cardTitle">Risk summary</div>
+        <div id="riskBadge" class="badge ok">—</div>
+        <ul id="riskList" class="riskList"></ul>
+      </div>
+
+      <div class="card">
+        <div class="cardTitle">Timeline</div>
+        <div class="timeline">
+          <div>iat: <span id="tIat" class="mono">—</span></div>
+          <div>exp: <span id="tExp" class="mono">—</span></div>
+          <div>remaining: <span id="tRemain" class="mono">—</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Compare -->
+    <section class="pane" id="pane-compare">
+      <div class="grid2">
+        <div class="card">
+          <div class="cardTitle">Token A</div>
+          <textarea id="cmpA" class="input mono" rows="4" placeholder="Paste token A"></textarea>
+          <button id="btnUseLatestA" class="btn">Use latest</button>
+        </div>
+        <div class="card">
+          <div class="cardTitle">Token B</div>
+          <textarea id="cmpB" class="input mono" rows="4" placeholder="Paste token B"></textarea>
+          <button id="btnUseLatestB" class="btn">Use latest</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cardTitle">Differences (payload)</div>
+        <pre id="cmpOut" class="out mono"></pre>
+      </div>
+    </section>
+
+    <!-- Builder -->
+    <section class="pane" id="pane-builder">
+      <div class="card">
+        <div class="cardTitle">Token builder (edit + encode)</div>
+        <div class="hint">
+          Edit Header/Payload JSON. Re-encode. Optionally sign HS256/384/512 if you know the secret.
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="cardTitle">Header (JSON)</div>
+          <textarea id="bHeader" class="input mono" rows="8" placeholder='{"alg":"HS256","typ":"JWT"}'></textarea>
+        </div>
+        <div class="card">
+          <div class="cardTitle">Payload (JSON)</div>
+          <textarea id="bPayload" class="input mono" rows="8" placeholder='{"sub":"123","iat":1700000000,"exp":1700003600}'></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cardTitle">Signing</div>
+        <div class="form">
+          <label>Algorithm</label>
+          <select id="bAlg" class="text">
+            <option value="none">none (no signature)</option>
+            <option value="HS256">HS256 (HMAC-SHA-256)</option>
+            <option value="HS384">HS384 (HMAC-SHA-384)</option>
+            <option value="HS512">HS512 (HMAC-SHA-512)</option>
+          </select>
+
+          <label>HMAC Secret (only for HS*)</label>
+          <input id="bSecret" class="text mono" placeholder="Enter secret..." />
+
+          <div class="btnRow">
+            <button id="btnLoadFromDecode" class="btn">Load from Decode</button>
+            <button id="btnBuildUnsigned" class="btn">Encode</button>
+            <button id="btnBuildSigned" class="btn primary">Sign & Encode</button>
+            <button id="btnUseBuiltInDecode" class="btn">Use in Decode</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cardTitle">Output JWT</div>
+        <textarea id="bOut" class="input mono" rows="3" placeholder="Built token will appear here..."></textarea>
+        <div class="btnRow">
+          <button id="btnCopyBuilt" class="btn">Copy</button>
+          <button id="btnSaveBuiltToHistory" class="btn">Save</button>
+        </div>
+        <div id="bStatus" class="hint"></div>
+      </div>
+    </section>
+
+    <!-- Rules -->
+    <section class="pane" id="pane-rules">
+      <div class="card">
+        <div class="row space">
+          <div>
+            <div class="cardTitle">Request modifiers</div>
+            <div class="hint">Rule-based header/cookie changes for matching URLs.</div>
+          </div>
+          <div class="row">
+            <label class="switch">
+              <input id="rulesEnabled" type="checkbox" />
+              <span class="slider"></span>
+            </label>
+            <span class="toggleText">Rules</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cardTitle">Create / update rule</div>
+
+        <div class="form">
+          <label>Rule ID</label>
+          <input id="ruleId" class="text mono" placeholder="e.g. rule-1" />
+
+          <label>Enabled</label>
+          <select id="ruleEnabled" class="text">
+            <option value="true">true</option>
+            <option value="false">false</option>
+          </select>
+
+          <label>URL match type</label>
+          <select id="ruleMatchType" class="text">
+            <option value="contains">contains</option>
+            <option value="startsWith">startsWith</option>
+            <option value="regex">regex</option>
+          </select>
+
+          <label>URL match value</label>
+          <input id="ruleMatchValue" class="text mono" placeholder="example.com/api" />
+
+          <hr class="sep"/>
+
+          <label>Set Authorization: Bearer (literal JWT)</label>
+          <input id="ruleAuthLiteral" class="text mono" placeholder="xxx.yyy.zzz" />
+
+          <label>OR set Authorization from history entry timestamp (ts)</label>
+          <input id="ruleAuthFromTs" class="text mono" placeholder="Paste ts from History (optional)" />
+
+          <label>Upsert Cookie key=value</label>
+          <input id="ruleCookieKV" class="text mono" placeholder="access_token=xxx.yyy.zzz" />
+
+          <div class="btnRow">
+            <button id="btnSaveRule" class="btn primary">Save rule</button>
+            <button id="btnDeleteRule" class="btn danger">Delete rule</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cardTitle">Existing rules</div>
+        <div id="rulesList" class="list"></div>
+      </div>
+    </section>
+
+    <!-- History -->
+    <section class="pane" id="pane-history">
+      <div class="card">
+        <div class="row space">
+          <div class="cardTitle">Detected tokens</div>
+          <button id="btnClearHistory" class="btn danger">Clear</button>
+        </div>
+        <div id="historyList" class="list"></div>
+        <div class="hint">Tip: click an item to load it into Decode. Use ts in Rules if needed.</div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="sidebar.js"></script>
+</body>
+</html>
